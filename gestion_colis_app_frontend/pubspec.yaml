@@ -1,0 +1,49 @@
+name: gestion_colis_app
+description: Application mobile de gestion de colis pour agence de voyage
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Requêtes HTTP vers l'API Flask
+  dio: ^5.4.0
+
+  # Navigation entre écrans (routing moderne)
+  go_router: ^13.0.0
+
+  # Police moderne et lisible pour la charte graphique
+  google_fonts: ^6.1.0
+
+  # Génération et impression/partage de PDF (reçu de colis)
+  pdf: ^3.10.8
+  printing: ^5.12.0
+
+  # Graphiques pour l'onglet Statistiques
+  fl_chart: ^0.68.0
+
+  # Icônes Material par défaut
+  cupertino_icons: ^1.0.6
+
+  # Stockage chiffré et persistant du token de connexion
+  flutter_secure_storage: ^9.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo.png"

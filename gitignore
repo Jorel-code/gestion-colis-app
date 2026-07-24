@@ -1,0 +1,9 @@
+# Backend Python
+gestion_colis_backend/venv/
+gestion_colis_backend/__pycache__/
+gestion_colis_backend/*.pyc
+
+# Flutter
+gestion_colis_app_frontend/build/
+gestion_colis_app_frontend/.dart_tool/
+gestion_colis_app_frontend/android/.gradle/
