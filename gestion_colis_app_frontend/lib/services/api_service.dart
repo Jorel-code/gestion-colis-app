@@ -3,7 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/colis.dart';
 import '../models/historique.dart';
 
-// Adresse du serveur Flask :
+// Adresse du serveur Flask, déployé sur Render :
 const String baseUrl = 'https://gestion-colis-app.onrender.com';
 
 class ApiService {
@@ -17,8 +17,11 @@ class ApiService {
 
   final Dio _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 5),
+    // Le plan gratuit de Render met le serveur en veille après 15 min
+    // d'inactivité ; le réveil peut prendre jusqu'à 50-60 secondes.
+    // Un timeout de 5s le coupait systématiquement en pleine relance.
+    connectTimeout: const Duration(seconds: 60),
+    receiveTimeout: const Duration(seconds: 60),
   ));
 
   final _storage = const FlutterSecureStorage();
