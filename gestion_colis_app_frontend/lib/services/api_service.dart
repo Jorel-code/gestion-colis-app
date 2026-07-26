@@ -4,7 +4,7 @@ import '../models/colis.dart';
 import '../models/historique.dart';
 
 // Adresse du serveur Flask :
-const String baseUrl = 'http://192.168.162.170:5000';
+const String baseUrl = 'https://gestion-colis-app.onrender.com';
 
 class ApiService {
   // Singleton : tous les écrans (et le routeur) doivent voir le même token.

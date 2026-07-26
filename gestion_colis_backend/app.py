@@ -2,7 +2,7 @@ import os
 import decimal
 from flask import Flask, request, jsonify
 from flask_jwt_extended import (
-    JWTManager, create_access_token, jwt_required, get_jwt_identity
+    JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 from db import get_connection
@@ -52,7 +52,10 @@ def login():
     }
     
     # Le token contient l'identité chiffrée
-    access_token = create_access_token(identity=str(utilisateur['id_utilisateur']))
+    access_token = create_access_token(identity=str(utilisateur['id_utilisateur']),
+    additional_claims={
+        "role": utilisateur["role"]
+    })
 
     return jsonify({
         "token": access_token,
@@ -65,9 +68,12 @@ def login():
 @jwt_required()
 def ajouter_agent():
     # Récupération des données de l'utilisateur stockées dans le JWT
-    current_user = get_jwt_identity()
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    role = claims["role"]
+    #current_user = get_jwt_identity()
     
-    if current_user.get('role') != 'admin':
+    if role != 'admin':
         return jsonify({"erreur": "Accès réservé aux administrateurs"}), 403
 
     data = request.get_json()
