@@ -3,7 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/colis.dart';
 import '../models/historique.dart';
 
-// Adresse du serveur Flask, déployé sur Render :
+// Adresse du serveur Flask, déployé sur Render : gestion-colis-app.onrender.com
 const String baseUrl = 'https://gestion-colis-app.onrender.com';
 
 class ApiService {
@@ -134,4 +134,3 @@ class ApiService {
     });
   }
 }
-
