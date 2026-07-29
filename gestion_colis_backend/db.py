@@ -2,7 +2,7 @@ import os
 import mysql.connector
 
 def get_connection():
-    return mysql.connector.connect(
+    parametres = dict(
         host=os.environ.get("DB_HOST", "localhost"),
         user=os.environ.get("DB_USER", "root"),
         password=os.environ.get("DB_PASSWORD", "M0tdep@sse"),
@@ -11,3 +11,8 @@ def get_connection():
         collation='utf8mb4_unicode_ci',
         use_pure=True
     )
+    chemin_certificat = os.environ.get("DB_SSL_CA")
+    if chemin_certificat:
+        parametres["ssl_ca"] = chemin_certificat
+        parametres["ssl_verify_cert"] = True
+    return mysql.connector.connect(**parametres)
