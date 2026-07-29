@@ -17,6 +17,49 @@ jwt = JWTManager(app)
 STATUTS_VALIDES = ['Enregistré', 'Reçu', 'En transit', 'Arrivé', 'Livré', 'Perdu', 'Volé']
 
 
+# ⚠️ ROUTE TEMPORAIRE — à supprimer juste après l'avoir utilisée une fois.
+# Exécute schema_gestion_colis.sql contre la base actuellement configurée
+# (Aiven, via les mêmes variables d'environnement que le reste de l'app).
+# On saute CREATE DATABASE / USE : Aiven impose une base fixe (defaultdb),
+# l'utilisateur avnadmin n'a pas le droit d'en créer une autre.
+@app.route('/admin/init-db-temporaire', methods=['GET'])
+def init_db_temporaire():
+    try:
+        with open('schema_gestion_colis.sql', 'r', encoding='utf-8') as f:
+            contenu = f.read()
+
+        instructions = [
+            ligne.strip() for ligne in contenu.split(';')
+            if ligne.strip()
+            and not ligne.strip().upper().startswith('CREATE DATABASE')
+            and not ligne.strip().upper().startswith('USE ')
+        ]
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        resultats = []
+        for instruction in instructions:
+            try:
+                cursor.execute(instruction)
+                conn.commit()
+                resultats.append({"ok": True, "debut": instruction[:60]})
+            except Exception as e:
+                resultats.append({"ok": False, "debut": instruction[:60], "erreur": str(e)})
+        cursor.close()
+        conn.close()
+
+        return jsonify({"resultats": resultats}), 200
+    except Exception as e:
+        return jsonify({"erreur_generale": str(e)}), 500
+
+
+# Route racine : sert uniquement aux vérifications automatiques de Render
+# ("health checks"), jamais appelée par l'app Flutter elle-même.
+@app.route('/', methods=['GET', 'HEAD'])
+def accueil():
+    return jsonify({"statut": "API gestion de colis en ligne"}), 200
+
+
 def convertir_decimals(ligne):
     """Convertit les décimaux MySQL en float pour le JSON."""
     for cle, valeur in ligne.items():
