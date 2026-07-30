@@ -17,21 +17,6 @@ jwt = JWTManager(app)
 STATUTS_VALIDES = ['Enregistré', 'Reçu', 'En transit', 'Arrivé', 'Livré', 'Perdu', 'Volé']
 
 
-# ⚠️ ROUTE TEMPORAIRE — à supprimer juste après l'avoir utilisée une fois.
-@app.route('/admin/migration-idempotence-temporaire', methods=['GET'])
-def migration_idempotence_temporaire():
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("ALTER TABLE Colis ADD COLUMN idempotency_key VARCHAR(36) UNIQUE")
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return jsonify({"message": "Colonne idempotency_key ajoutée avec succès"}), 200
-    except Exception as e:
-        return jsonify({"erreur": str(e)}), 500
-
-
 # Route racine : sert uniquement aux vérifications automatiques de Render
 # ("health checks"), jamais appelée par l'app Flutter elle-même.
 @app.route('/', methods=['GET', 'HEAD'])
