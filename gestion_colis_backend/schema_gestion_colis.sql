@@ -50,6 +50,7 @@ CREATE TABLE Colis (
     id_agence_depart        INT NOT NULL,
     id_agence_arrivee       INT NOT NULL,
     date_enregistrement     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    idempotency_key         VARCHAR(36) UNIQUE,
     FOREIGN KEY (id_client_expediteur)   REFERENCES Client(id_client),
     FOREIGN KEY (id_client_destinataire) REFERENCES Client(id_client),
     FOREIGN KEY (id_agence_depart)       REFERENCES Agence(id_agence),

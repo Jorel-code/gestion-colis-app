@@ -18,45 +18,25 @@ STATUTS_VALIDES = ['Enregistré', 'Reçu', 'En transit', 'Arrivé', 'Livré', 'P
 
 
 # ⚠️ ROUTE TEMPORAIRE — à supprimer juste après l'avoir utilisée une fois.
-# Exécute schema_gestion_colis.sql contre la base actuellement configurée
-# (Aiven, via les mêmes variables d'environnement que le reste de l'app).
-# On saute CREATE DATABASE / USE : Aiven impose une base fixe (defaultdb),
-# l'utilisateur avnadmin n'a pas le droit d'en créer une autre.
-#@app.route('/admin/init-db-temporaire', methods=['GET'])
-    #        #    def init_db_temporaire():
-    #         #       try:
-    #          #          with open('schema_gestion_colis.sql', 'r', encoding='utf-8') as f:
-    #           #             contenu = f.read()
-    #                    #instructions = [
-    #                     #   ligne.strip() for ligne in contenu.split(';')
-    #                      #  if ligne.strip()
-    #                       # and not ligne.strip().upper().startswith('CREATE DATABASE')
-    #                        #and not ligne.strip().upper().startswith('USE ')
-    #                    #]
-#
-    #                    #conn = get_connection()
-    #                    #cursor = conn.cursor()
-    #                    #resultats = []
-    #                    #for instruction in instructions:
-    #                     #   try:
-    #                     #       cursor.execute(instruction)
-    #                      #      conn.commit()
-    #                       ##     resultats.append({"ok": True, "debut": instruction[:60]})
-    #                        except Exception as e:
-    #                            resultats.append({"ok": False, "debut": instruction[:60], "erreur": str(e)})
-    #                    cursor.close()
-    #                    conn.close()
-#
-    #                    return jsonify({"resultats": resultats}), 200
-    #                except Exception as e:
-    #                    return jsonify({"erreur_generale": str(e)}), 500
-#
+@app.route('/admin/migration-idempotence-temporaire', methods=['GET'])
+def migration_idempotence_temporaire():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("ALTER TABLE Colis ADD COLUMN idempotency_key VARCHAR(36) UNIQUE")
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"message": "Colonne idempotency_key ajoutée avec succès"}), 200
+    except Exception as e:
+        return jsonify({"erreur": str(e)}), 500
+
 
 # Route racine : sert uniquement aux vérifications automatiques de Render
 # ("health checks"), jamais appelée par l'app Flutter elle-même.
-###@app.route('/', methods=['GET', 'HEAD'])
-##def accueil():
- #   return jsonify({"statut": "API gestion de colis en ligne"}), 200
+@app.route('/', methods=['GET', 'HEAD'])
+def accueil():
+    return jsonify({"statut": "API gestion de colis en ligne"}), 200
 
 
 def convertir_decimals(ligne):
@@ -153,12 +133,26 @@ def ajouter_colis():
 
     conn = get_connection()
     cursor = conn.cursor()
+
+    # Idempotence : si cette même tentative d'ajout a déjà été traitée
+    # (clé déjà vue), on renvoie le colis existant au lieu d'en recréer un.
+    cle_idempotence = data.get('idempotency_key')
+    if cle_idempotence:
+        cursor.execute("SELECT id_colis FROM Colis WHERE idempotency_key = %s", (cle_idempotence,))
+        existant = cursor.fetchone()
+        if existant:
+            cursor.close()
+            conn.close()
+            return jsonify({"message": "Colis déjà enregistré", "id_colis": existant[0]}), 200
+
     sql = """
-        INSERT INTO Colis (description, poids, id_client_expediteur,id_client_destinataire, id_agence_depart, id_agence_arrivee)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO Colis (description, poids, id_client_expediteur, id_client_destinataire,
+                            id_agence_depart, id_agence_arrivee, idempotency_key)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
     valeurs = (data['description'], data['poids'], data['id_client_expediteur'],
-               data['id_client_destinataire'], data['id_agence_depart'], data['id_agence_arrivee'])
+               data['id_client_destinataire'], data['id_agence_depart'], data['id_agence_arrivee'],
+               cle_idempotence)
     cursor.execute(sql, valeurs)
     conn.commit()
     nouvel_id = cursor.lastrowid

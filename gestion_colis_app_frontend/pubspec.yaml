@@ -32,6 +32,9 @@ dependencies:
   # Stockage chiffré et persistant du token de connexion
   flutter_secure_storage: ^9.0.0
 
+  # Génère des identifiants uniques, utilisés pour l'idempotence des ajouts
+  uuid: ^4.4.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

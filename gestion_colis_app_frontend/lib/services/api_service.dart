@@ -3,7 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/colis.dart';
 import '../models/historique.dart';
 
-// Adresse du serveur Flask, déployé sur Render : gestion-colis-app.onrender.com
+// Adresse du serveur Flask, déployé sur Render :
 const String baseUrl = 'https://gestion-colis-app.onrender.com';
 
 class ApiService {
@@ -77,8 +77,10 @@ class ApiService {
     return (response.data as List).map((e) => Colis.fromJson(e)).toList();
   }
 
-  Future<int> ajouterColis(Colis colis) async {
-    final response = await _dio.post('/colis', data: colis.toJson());
+  Future<int> ajouterColis(Colis colis, {required String idempotencyKey}) async {
+    final donnees = colis.toJson();
+    donnees['idempotency_key'] = idempotencyKey;
+    final response = await _dio.post('/colis', data: donnees);
     final data = response.data;
     if (data != null && data['id_colis'] != null) {
       return (data['id_colis'] as num).toInt();
@@ -134,3 +136,4 @@ class ApiService {
     });
   }
 }
+

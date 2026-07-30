@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
 import '../models/colis.dart';
 import '../services/api_service.dart';
 
@@ -13,7 +14,13 @@ class AjouterColisScreen extends StatefulWidget {
 class _AjouterColisScreenState extends State<AjouterColisScreen> {
   final _formKey = GlobalKey<FormState>();
   final ApiService _apiService = ApiService();
-  
+
+  // Générée une seule fois à l'ouverture de l'écran : si l'envoi échoue
+  // (réseau coupé, timeout Render...) et que l'utilisateur retape sur
+  // "Enregistrer", c'est TOUJOURS la même clé qui repart — le serveur
+  // reconnaît alors qu'il s'agit de la même tentative et ne duplique pas.
+  final String _cleIdempotence = const Uuid().v4();
+
   final _descController = TextEditingController();
   final _poidsController = TextEditingController();
 
@@ -56,7 +63,7 @@ class _AjouterColisScreenState extends State<AjouterColisScreen> {
     );
 
     try {
-      await _apiService.ajouterColis(nouveauColis);
+      await _apiService.ajouterColis(nouveauColis, idempotencyKey: _cleIdempotence);
       if (mounted) {
         context.pop(true); // true = un colis a bien été ajouté
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Colis ajouté avec succès')));
